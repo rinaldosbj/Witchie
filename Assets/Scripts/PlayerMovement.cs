@@ -6,138 +6,160 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
-    public Rigidbody body;
-    public float velocity = 1f;
-    public float timeInterval = 2; // -Temporary-
-    private float timer = 0; // -Temporary-
     private bool isMakingAMove = false;
-    private int lockedDirection = 0; // -Temporary-
-    private float lockedPosition = 0; // -Temporary-
     private Vector2 startTouchPosition;
     private Vector2 endTouchPosition;
     public float swipeSensibility;
+    public GameObject paredes;
+    public GameObject caldeiroes;
+    public GameObject runas;
+    private enum Directions { Right, Left, Up, Down }
+    private Directions moveDirection;
+    private bool isFirstMicroMove;
 
     private void Update()
     {
         if (!isMakingAMove)
         {
             CheckForSwipe();
-            CheckForKeyPresses(); // For testing purposes -Temporary-
+            isFirstMicroMove = true;
         }
         else
         {
-            if (lockedDirection == 1) // Locked X -Temporary-
+            switch (moveDirection)
             {
-                transform.position = new Vector3(lockedPosition, transform.position.y, transform.position.z);
+                case Directions.Right:
+                    Move(new Vector3(transform.position.x + 1, transform.position.y, transform.position.z));
+                    break;
+                case Directions.Left:
+                    Move(new Vector3(transform.position.x - 1, transform.position.y, transform.position.z));
+                    break;
+                case Directions.Up:
+                    Move(new Vector3(transform.position.x, transform.position.y, transform.position.z + 1));
+                    break;
+                case Directions.Down:
+                    Move(new Vector3(transform.position.x, transform.position.y, transform.position.z - 1));
+                    break;
             }
-            else if (lockedDirection == 2) // Locked Z -Temporary-
-            {
-                transform.position = new Vector3(transform.position.x, transform.position.y, lockedPosition);
-            }
-
-            // Will be substituted for collision on the wall -Temporary-
-            Timer();
         }
     }
 
     private void CheckForSwipe()
     {
-        if (Input.touchCount > 0 && Input. GetTouch (0).phase == TouchPhase.Began)
-            {
-                startTouchPosition = Input.GetTouch(0).position;
-            }
-            if (Input.touchCount > 0 && Input. GetTouch (0).phase == TouchPhase.Ended)
-            {
-                endTouchPosition = Input.GetTouch(0).position;
+        if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
+        {
+            startTouchPosition = Input.GetTouch(0).position;
+        }
+        if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Ended)
+        {
+            endTouchPosition = Input.GetTouch(0).position;
 
-                float deltaX = endTouchPosition.x - startTouchPosition.x;
-                float deltaY = endTouchPosition.y - startTouchPosition.y;
+            float deltaX = endTouchPosition.x - startTouchPosition.x;
+            float deltaY = endTouchPosition.y - startTouchPosition.y;
 
-                if (Math.Abs(deltaX) > Math.Abs(deltaY))
+            if (Math.Abs(deltaX) > Math.Abs(deltaY))
+            {
+                if (deltaX > swipeSensibility)
                 {
-                    if (deltaX > swipeSensibility)
-                    {
-                        moveRight();
-                    }
-                    else if (deltaX < -swipeSensibility)
-                    {
-                        moveLeft();
-                    }
+                    isMakingAMove = true;
+                    moveDirection = Directions.Right;
                 }
-                else
+                else if (deltaX < -swipeSensibility)
                 {
-                    if (deltaY > swipeSensibility)
-                    {
-                        moveUp();
-                    }
-                    else if (deltaY < -swipeSensibility)
-                    {
-                        moveDown();
-                    }
+                    isMakingAMove = true;
+                    moveDirection = Directions.Left;
                 }
             }
-    }
-
-    private void CheckForKeyPresses()
-    {
-        if (Input.GetKeyDown(KeyCode.RightArrow))
-        {
-            moveRight();
-        }
-        if (Input.GetKeyDown(KeyCode.LeftArrow))
-        {
-            moveLeft();
-        }
-        if (Input.GetKeyDown(KeyCode.UpArrow))
-        {
-            moveUp();
-        }
-        if (Input.GetKeyDown(KeyCode.DownArrow))
-        {
-            moveDown();
-        }
-    }
-
-    private void moveRight()
-    {
-        isMakingAMove = true;
-        body.velocity = new Vector3(velocity,0,0);
-        lockedDirection = 2;
-        lockedPosition = transform.position.z;
-    }
-    private void moveLeft()
-    {
-        isMakingAMove = true;
-        body.velocity = new Vector3(-velocity,0,0);
-        lockedDirection = 2;
-        lockedPosition = transform.position.z;
-    }
-    private void moveUp()
-    {
-        isMakingAMove = true;
-        body.velocity = new Vector3(0,0,velocity);
-        lockedDirection = 1;
-        lockedPosition = transform.position.x;
-    }
-    private void moveDown()
-    {
-        isMakingAMove = true;
-        body.velocity = new Vector3(0,0,-velocity);
-        lockedDirection = 1;
-        lockedPosition = transform.position.x;
-    }
-
-    private void Timer()
-    {
-        if (timer < timeInterval)
-            { 
-                timer += Time.deltaTime; 
-            } 
-            else 
+            else
             {
-                timer = 0;
+                if (deltaY > swipeSensibility)
+                {
+                    isMakingAMove = true;
+                    moveDirection = Directions.Up;
+                }
+                else if (deltaY < -swipeSensibility)
+                {
+                    isMakingAMove = true;
+                    moveDirection = Directions.Down;
+                }
+            }
+        }
+    }
+
+
+    private void Move(Vector3 direcao)
+    {
+        int countParede = paredes.transform.childCount - 1;
+        int countCaldeirao = caldeiroes.transform.childCount - 1;
+        int countRunas = runas.transform.childCount - 1;
+
+        bool isWall = false;
+
+        while (countParede >= 0)
+        {
+            if (paredes.transform.GetChild(countParede).position == new Vector3(direcao.x, 1, direcao.z))
+            {
+                isWall = true;
                 isMakingAMove = false;
             }
+            countParede--;
+        }
+        while (countRunas >= 0)
+        {
+            if (runas.transform.GetChild(countRunas).position == new Vector3(direcao.x, 1, direcao.z))
+            {
+                isWall = true;
+                isMakingAMove = false;
+            }
+            countRunas--;
+        }
+        while (countCaldeirao >= 0)
+        {
+            if (caldeiroes.transform.GetChild(countCaldeirao).position == new Vector3(direcao.x, 1, direcao.z))
+            {
+                isWall = true;
+                isMakingAMove = false;
+                if (isFirstMicroMove)
+                {
+                    countParede = paredes.transform.childCount - 1;
+                    Vector3 boxDirection = new Vector3(direcao.x, 1, direcao.z);
+                    switch (moveDirection)
+                        {
+                            case Directions.Right:
+                                boxDirection = new Vector3(direcao.x + 1, 1, direcao.z);
+                                break;
+                            case Directions.Left:
+                                boxDirection = new Vector3(direcao.x - 1, 1, direcao.z);
+                                break;
+                            case Directions.Up:
+                                boxDirection = new Vector3(direcao.x, 1, direcao.z + 1);
+                                break;
+                            case Directions.Down:
+                                boxDirection = new Vector3(direcao.x, 1, direcao.z - 1);
+                                break;
+                        }
+                    bool boxIsNearTheWall = false;
+                    while (countParede >= 0)
+                    {
+                        if (paredes.transform.GetChild(countParede).position == boxDirection)
+                        {
+                            boxIsNearTheWall = true;
+                        }
+                        countParede--;
+                    }
+                    if (!boxIsNearTheWall)
+                    {
+                        caldeiroes.transform.GetChild(countCaldeirao).position = boxDirection;
+                        transform.position = direcao;
+                    }
+                }
+            }
+            countCaldeirao--;
+        }
+        if (!isWall)
+        {
+            isFirstMicroMove = false;
+            transform.position = direcao;
+        }
     }
-    
 }

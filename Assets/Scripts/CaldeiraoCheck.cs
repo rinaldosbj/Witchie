@@ -16,7 +16,7 @@ public class CaldeiraoCheck : MonoBehaviour
             {
                 if (caldeirao.transform.GetChild(countCaldeirao).position == transform.GetChild(count).position)
                 {
-                    gameObject.SetActive(false);
+                    Destroy(transform.GetChild(count).gameObject);
                     Debug.Log("Colocou caldeirao na runa");
                 }
                 count --;

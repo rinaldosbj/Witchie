@@ -16,6 +16,13 @@ public class PlayerMovement : MonoBehaviour
     private enum Directions { Right, Left, Up, Down }
     private Directions moveDirection;
     private bool isFirstMicroMove;
+    public int moveCounter;
+    public GameLogicScript gameLogic;
+
+    private void Start()
+    {
+        gameLogic = FindObjectOfType<GameLogicScript>();
+    }
 
     private void Update()
     {
@@ -63,11 +70,15 @@ public class PlayerMovement : MonoBehaviour
                 {
                     isMakingAMove = true;
                     moveDirection = Directions.Right;
+                    moveCounter++;
+                    gameLogic.UpdateMovementText(moveCounter);
                 }
                 else if (deltaX < -swipeSensibility)
                 {
                     isMakingAMove = true;
                     moveDirection = Directions.Left;
+                    moveCounter++;
+                    gameLogic.UpdateMovementText(moveCounter);
                 }
             }
             else
@@ -76,11 +87,15 @@ public class PlayerMovement : MonoBehaviour
                 {
                     isMakingAMove = true;
                     moveDirection = Directions.Up;
+                    moveCounter++;
+                    gameLogic.UpdateMovementText(moveCounter);
                 }
                 else if (deltaY < -swipeSensibility)
                 {
                     isMakingAMove = true;
                     moveDirection = Directions.Down;
+                    moveCounter++;
+                    gameLogic.UpdateMovementText(moveCounter);
                 }
             }
         }
